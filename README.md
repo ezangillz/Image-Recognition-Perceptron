@@ -7,9 +7,10 @@ It is a neural network that tries hard to determine what object is shown in the 
 Also it is my first neural network, so please, feel free to criticize, I need it!
 
 ## How to use this?
+First you'll need to compile the whole thing. The main class is *ImageRecognition*.
 
-All right, so to train this perceptron you need to have a set of images for each one of the two objects.
-The class that is used as a main class is *ImageRecognition*.
+To train this perceptron you need to have a set of images for each one of the two objects.
+
 So to start training you just need to do something like that:
 ```
 java ImageRecognition -learn A(first object) 1.png 2.png 3.png ... N.png
