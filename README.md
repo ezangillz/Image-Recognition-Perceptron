@@ -22,5 +22,5 @@ java ImageRecognition -learn B Object2/*
 ```
 Next, you can use this trained perceptron to recognize these objects in other images:
 ```
-jave ImageRecognition [path_to_image.png]
+java ImageRecognition [path_to_image.png]
 ```
