@@ -14,6 +14,11 @@ So to start training you just need to do something like that:
 ```
 java ImageRecognition -learn A(first object) 1.png 2.png 3.png ... N.png
 ```
+*or*
+`
+java ImageRecognition -learn A Object1/*
+java ImageRecognition -learn B Object2/*
+```
 and you should do the same for the B object.
 Next, you can use this trained perceptron to recognize these objects in other images:
 ```
