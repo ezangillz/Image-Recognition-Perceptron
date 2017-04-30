@@ -7,19 +7,15 @@ It is a neural network that tries hard to determine what object is shown in the 
 Also it is my first neural network, so please, feel free to criticize, I need it!
 
 ## How to use this?
-First you'll need to compile the whole thing. The main class is *ImageRecognition*.
+First you'll need to compile the whole thing. The main class is __ImageRecognition__.
 ```
 javac ImageRecognition.java
 ```
 
 To train this perceptron you need to have a set of images for each one of the two objects.
 
-So to start training you just need to do something like that:
-```
-java ImageRecognition -learn A(first object) 1.png 2.png 3.png ... N.png
-```
-and you should do the same for the B object. 
-Or simply do the following:
+So to start the training you need to create two folders __Object1__ and __Object2__ and move corresponding images to each folder.
+Then you need to do the following:
 ```
 java ImageRecognition -learn A Object1/*
 java ImageRecognition -learn B Object2/*
