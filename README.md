@@ -8,6 +8,9 @@ Also it is my first neural network, so please, feel free to criticize, I need it
 
 ## How to use this?
 First you'll need to compile the whole thing. The main class is *ImageRecognition*.
+```
+javac ImageRecognition.java
+```
 
 To train this perceptron you need to have a set of images for each one of the two objects.
 
