@@ -14,8 +14,7 @@ So to start training you just need to do something like that:
 ```
 java ImageRecognition -learn A(first object) 1.png 2.png 3.png ... N.png
 ```
-and you should do the same for the B object.
-*or*
+and you should do the same for the B object. Or simply do the following:
 ```
 java ImageRecognition -learn A Object1/*
 java ImageRecognition -learn B Object2/*
