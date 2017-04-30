@@ -12,7 +12,7 @@ All right, so to train this perceptron you need to have a set of images for each
 The class that is used as a main class is *ImageRecognition*.
 So to start training you just need to do something like that:
 ```
-java ImageRecognition -learn A[first object] 1.png 2.png 3.png ... N.png
+java ImageRecognition -learn A(first object) 1.png 2.png 3.png ... N.png
 ```
 and you should do the same for the B object.
 Next, you can use this trained perceptron to recognize these objects in other images:
