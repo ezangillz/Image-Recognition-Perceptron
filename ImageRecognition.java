@@ -1,75 +1,89 @@
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class ImageRecognition {
 
-    private static final int NUMBER_OF_INPUTS = 7;
+    private static final int NUMBER_OF_INPUTS = 28;
+    private static final int NUMBER_OF_ITERATIONS = 10;
 
     public static void main(String[] args) {
         ImageRecognition imageRecognition = new ImageRecognition();
         if (args.length == 0) {
-            System.out.println("ERROR: no options passed, use -help for more info");
+            System.out.println("No options passed, use -help for more info");
             System.exit(0);
         }
         else if (args[0].equals("-help")) {
-            System.out.println("The commands are:" +
-                    "\n\n-help\t\t\t\t\t| shows this thing" +
-                    "\n\n\n[path_to_image]\t\t\t\t| tells you what's displayed on your image" +
-                    "\n\n\n-learn [OBJECT_NUMBER (A OR B)]\t\t|\n\t\t[path_to_img_1]\t\t|\n\t\t[path_to_img_2] ...\t|\n\t\t[path_to_img_N]\t\t| teaches your dumb network to see the object from files from 1 to N");
+            imageRecognition.showHelp();
             System.exit(0);
         }
         else if (args[0].equals("-learn")) {
-            int object = 0;
-            if (args[1].equals("A") || args[1].equals("a"))
-                object = -1;
-            else if (args[1].equals("B") || args[1].equals("b"))
-                object = 1;
-            else {
-                System.out.println("Choose object between A and B please");
-                System.exit(0);
-            }
-            String[] images = new String[args.length-2];
-            for (int i = 2; i < args.length; i++) {
-                images[i-2] = args[i];
-            }
-            imageRecognition.learn(object, images);
+            ArrayList<String> imagesOne = new ArrayList<>();
+            ArrayList<String> imagesTwo = new ArrayList<>();
+
+            int i = 2;
+            for (; args[i+2].charAt(0) != '-'; i++)
+                imagesOne.add(args[i + 2]);
+
+            i += 2;
+            String objOne = args[1];
+            String objTwo = args[i++];
+
+            for (; i + 2 < args.length; i++)
+                imagesTwo.add(args[i + 2]);
+
+            imageRecognition.learn(objOne, objTwo, imagesOne, imagesTwo, NUMBER_OF_ITERATIONS);
+        }
+        else if (args[0].equals("-reset")) {
+            Perceptron.getInit(NUMBER_OF_INPUTS).reset();
+            System.out.println("Done");
         }
         else {
-            PerceptronClient perceptronClient = new PerceptronClient();
-            double[] inputs = imageRecognition.openImage(args[0]);
-            int assumedOutput = perceptronClient.calculate(inputs, NUMBER_OF_INPUTS);
-            Scanner reader = new Scanner(System.in);
-
-            if (assumedOutput == -1) {
-                System.out.println("Is it an OBJECT A? Y\\N");
-                String answer = reader.nextLine();
-                if (answer.equals("N") || answer.equals("n"))
-                    perceptronClient.relearn(1, assumedOutput, inputs, NUMBER_OF_INPUTS);
-            }
-            else {
-                System.out.println("Is it an OBJECT B? Y\\N");
-                String answer = reader.nextLine();
-                if (answer.equals("N") || answer.equals("n"))
-                    perceptronClient.relearn(-1, assumedOutput, inputs, NUMBER_OF_INPUTS);
-            }
+            imageRecognition.feedPicture(args[0]);
         }
 
     }
 
+    /* takes just one picture to determine what object is displayed */
+    private void feedPicture(String imagePath) {
+        double[] inputs = openImage(imagePath);
+        int assumedOutput = calculate(inputs, NUMBER_OF_INPUTS);
+        Scanner reader = new Scanner(System.in);
+
+        if (assumedOutput == -1) {
+            System.out.println(Perceptron.getInit(NUMBER_OF_INPUTS).getObjOne() + "? Y\\N");
+            String answer = reader.nextLine();
+            if (answer.equals("N") || answer.equals("n"))
+                relearn(1, assumedOutput, inputs, NUMBER_OF_INPUTS);
+        }
+        else {
+            System.out.println(Perceptron.getInit(NUMBER_OF_INPUTS).getObjTwo() + "? Y\\N");
+            String answer = reader.nextLine();
+            if (answer.equals("N") || answer.equals("n"))
+                relearn(-1, assumedOutput, inputs, NUMBER_OF_INPUTS);
+        }
+    }
+
     /**
      * The network learns that the object, that is shown in the set of passed images, is represented by -1 or 1
-     * @param object takes -1 or 1 as argument to represent one of two objects
-     * @param images set of images in which the object is shown that is bind to the first argument
      */
-    private void learn(int object, String[] images) {
-        PerceptronClient perceptronClient = new PerceptronClient();
-        for (int i = 0; i < images.length; i++) {
-            double[] inputs = openImage(images[i]);
-            perceptronClient.calculate(inputs, NUMBER_OF_INPUTS, object);
+    private void learn(String objOne, String objTwo, ArrayList<String> imagesOne, ArrayList<String> imagesTwo, int numberOfIterations) {
+        Perceptron.getInit(NUMBER_OF_INPUTS).setObjOne(objOne);
+        Perceptron.getInit(NUMBER_OF_INPUTS).setObjTwo(objTwo);
+        System.out.println("\n!!!!!!" + objOne);
+        for (int i = 0; i < imagesOne.size(); i++) {
+            double[] inputs = openImage(imagesOne.get(i));
+            calculate(inputs, NUMBER_OF_INPUTS, -1);
         }
+        System.out.println("\n!!!!!!" + objTwo);
+        for (int i = 0; i < imagesTwo.size(); i++) {
+            double[] inputs = openImage(imagesTwo.get(i));
+            calculate(inputs, NUMBER_OF_INPUTS, 1);
+        }
+        if (numberOfIterations > 0)
+            learn(objOne, objTwo, imagesOne, imagesTwo, numberOfIterations - 1);
     }
 
     /* opens an image with passed path and returns a normalized array of that image */
@@ -109,28 +123,7 @@ public class ImageRecognition {
 
         for (int i = 0; i < NUMBER_OF_INPUTS; i++) {
             normalized[i] = bins[i] / all;
-            //System.out.println(normalized[i]);
         }
-    }
-
-    /* returns bin of the pixel that was passed to this func */
-    private int getBin(int value) {
-        int bin = 1;
-        if (value < 32)
-            bin = 1;
-        else if (value < 64)
-            bin = 2;
-        else if (value < 96)
-            bin = 3;
-        else if (value < 128)
-            bin = 4;
-        else if (value < 160)
-            bin = 5;
-        else if (value < 192)
-            bin = 6;
-        else if (value <= 225)
-            bin = 7;
-        return bin;
     }
 
     /* converts to grayscale lol */
@@ -146,4 +139,104 @@ public class ImageRecognition {
             }
         }
     }
+
+    /** this function is dedicated for "automatic" learning
+     * cause it gets normalized inputs, number of inputs and the right answer
+     * @param inputs
+     * @param capacity number of inputs
+     * @param answer the right answer that net should choose, otherwise will be relearned
+     */
+    public void calculate(double[] inputs, int capacity, int answer) {
+        //System.out.println("\n\n\n" + learningRate + "\n\n\n");
+        int assumedOutput = Perceptron.getInit(capacity).determine(Perceptron.getInit(capacity).sumUp(inputs));
+        if (answer != assumedOutput) {
+            Perceptron.getInit(capacity).relearn(answer, inputs, capacity);
+        }
+    }
+
+    /* this func is dedicated just for a single image */
+    public int calculate(double[] inputs, int capacity) {
+        return Perceptron.getInit(capacity).determine(Perceptron.getInit(capacity).sumUp(inputs));
+    }
+
+    public void relearn(int answer, int assumedOutput, double[] inputs, int capacity) {
+        Perceptron.getInit(capacity).relearn(answer, inputs, capacity);
+    }
+
+    private void showHelp() {
+        System.out.println("___________________________________________________________________________" +
+                "\n-help\t\t\t\t\t\t | shows this thing" +
+                "\n___________________________________________________________________________" +
+                "\n\n[path_to_image]\t\t\t\t\t | recognizes single image" +
+                "\n___________________________________________________________________________" +
+                "\n\n-learn -[OBJECT_A_NAME] [FOLDER_WITH_IMAGES_A/*] |" +
+                "\n\t-[OBJECT_B_NAME] [FOLDER_WITH_IMAGES_B/*]| teaches the net to recognize certain objects" +
+                "\t\t\t\t\t\t\t" +
+                "\n\n\t\tEXAMPLE: -learn -Apple apples/* -Banana bananas/*" +
+                "\n___________________________________________________________________________" +
+                "\n\n-reset\t\t\t\t\t\t | resets the net");
+    }
+
+    /* returns bin of the pixel that was passed to this func */
+    private int getBin(int value) {
+        int bin = 1;
+        if (value < 8)
+            bin = 1;
+        else if (value < 16)
+            bin = 2;
+        else if (value < 24)
+            bin = 3;
+        else if (value < 32)
+            bin = 4;
+        else if (value < 40)
+            bin = 5;
+        else if (value < 48)
+            bin = 6;
+        else if (value < 56)
+            bin = 7;
+        else if (value < 64)
+            bin = 8;
+        else if (value < 72)
+            bin = 9;
+        else if (value < 80)
+            bin = 10;
+        else if (value < 88)
+            bin = 11;
+        else if (value < 96)
+            bin = 12;
+        else if (value < 104)
+            bin = 13;
+        else if (value < 112)
+            bin = 14;
+        else if (value < 120)
+            bin = 15;
+        else if (value < 128)
+            bin = 16;
+        else if (value < 136)
+            bin = 17;
+        else if (value < 144)
+            bin = 18;
+        else if (value < 152)
+            bin = 19;
+        else if (value < 160)
+            bin = 20;
+        else if (value < 168)
+            bin = 21;
+        else if (value < 176)
+            bin = 22;
+        else if (value < 184)
+            bin = 23;
+        else if (value < 192)
+            bin = 24;
+        else if (value < 200)
+            bin = 25;
+        else if (value < 208)
+            bin = 26;
+        else if (value < 216)
+            bin = 27;
+        else if (value <= 225)
+            bin = 28;
+        return bin;
+    }
+
 }

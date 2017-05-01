@@ -1,4 +1,4 @@
-# Image Recognition Perceptron
+# Image Recognition Single-Layer Perceptron
 
 ## What is this?
 
@@ -17,10 +17,14 @@ To train this perceptron you need to have a set of images for each one of the tw
 So to start the training you need to create two folders __Object1__ and __Object2__ and move corresponding images to each folder.
 Then you need to do the following:
 ```
-java ImageRecognition -learn A Object1/*
-java ImageRecognition -learn B Object2/*
+java ImageRecognition -learn -Object1Name Object1/* -Object2Name Object2/*
 ```
 Next, you can use this trained perceptron to recognize these objects in other images:
 ```
 java ImageRecognition [path_to_image.png]
 ```
+Or reset the perceptron to retrain.
+```
+java ImageRecognition -reset
+```
+
